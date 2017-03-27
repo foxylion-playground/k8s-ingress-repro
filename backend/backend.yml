@@ -1,0 +1,66 @@
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: backend
+spec:
+  replicas: 2
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: backend
+        image: foxylion/k8s-ingress-repro:backend
+        imagePullPolicy: Always
+        resources:
+          limits:
+            memory: 64Mi
+        env:
+        - name: 'FAKE_MODIFIER'
+          value: 'v18'
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "rm /usr/share/nginx/html/ready.json && sleep 10"]
+              #command: ["sleep", "1"]
+        livenessProbe:
+          httpGet:
+            path: /healthy.json
+            port: 80
+          periodSeconds: 2
+        readinessProbe:
+          httpGet:
+            path: /ready.json
+            port: 80
+          periodSeconds: 2
+        ports:
+        - containerPort: 80
+          protocol: TCP
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: backend
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: backend
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: backend
+spec:
+  rules:
+  - host: backend.local
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: backend
+          servicePort: 80

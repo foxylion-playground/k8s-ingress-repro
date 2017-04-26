@@ -1,1 +1,4 @@
 .kube/
+logs/
+logs-*/
+*.log

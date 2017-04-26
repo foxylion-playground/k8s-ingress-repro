@@ -4,7 +4,6 @@ metadata:
   name: backend
 spec:
   replicas: 2
-  minReadySeconds: 5
   template:
     metadata:
       labels:
@@ -20,22 +19,15 @@ spec:
             memory: 64Mi
         env:
         - name: 'FAKE_MODIFIER'
-          value: 'v18'
+          value: 'v44'
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh", "-c", "rm /usr/share/nginx/html/ready.json && sleep 10"]
-              #command: ["sleep", "1"]
+              command: ["sleep", "15"]
         livenessProbe:
           httpGet:
-            path: /healthy.json
+            path: /
             port: 80
-          periodSeconds: 2
-        readinessProbe:
-          httpGet:
-            path: /ready.json
-            port: 80
-          periodSeconds: 2
         ports:
         - containerPort: 80
           protocol: TCP
